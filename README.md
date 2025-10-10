@@ -23,9 +23,4 @@ relative to *SimHTTP* location. Paths can be specified in an absolute form too.
 It's POC, but can be converted to a real project in future.
 
 ## To do
-Currently, it's unclear how to encode string for JSON values. Is it something like:
-```Swift
-var container = encoder.singleValueContainer()
-let encodedString = try container.encode(string)
-```
-?
+Currently nothing.

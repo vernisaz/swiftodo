@@ -7,6 +7,29 @@ struct StderrOutputStream: TextOutputStream {
     }
 }
 
+extension String {
+    func jsonEncoded() -> String {
+        var result = ""
+        for c in self {
+            switch c {
+            case "\"":
+                result.append("\\\"")
+            case "\n":
+                result.append("\\n")
+            case "\r":
+                result.append("\\r")
+            case "\t":
+                result.append("\\t")
+            case "\\":
+                result.append("\\\\")
+            default:
+                result.append(c)
+            }
+        }
+        return result
+    }
+}
+
 var standardError = StderrOutputStream()
 
 var parameters = [String : String]()
@@ -58,8 +81,8 @@ case "insert":
         if let date = dateFormatter.date(from: dateString) {
             // Cast the Date to NSDate
             let nsDate = date as NSDate
-            if !db.insertTask(name: parameters["name"] ?? "new task",
-                description: parameters["description"] ?? "description of task", 
+            if !db.insertTask(name: (parameters["name"] ?? "new task").jsonEncoded(),
+                description: (parameters["description"] ?? "description of task").jsonEncoded(), 
             due: nsDate) {
                 print("{{\"err\":\"Couldn't insert the task.\"}")
             } else {
@@ -85,8 +108,8 @@ case "update":
         if let date = dateFormatter.date(from: dateString) {
             // Cast the Date to NSDate
             let nsDate = date as NSDate
-            if !db.updateTask(id: id, name: parameters["name"] ?? "new task",
-                description: parameters["description"] ?? "description of task", 
+            if !db.updateTask(id: id, name: (parameters["name"] ?? "new task").jsonEncoded(),
+                description: (parameters["description"] ?? "description of task").jsonEncoded(), 
                 progress: Int(parameters["progress"] ?? "0") ?? 0,
                 due: nsDate) {
                 print("{{\"err\":\"Couldn't update the task.\"}")
