@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <title>Comming tasks</title>
+  <style>
+     .flex-container {
+      display: flex; /* Enables Flexbox layout */
+      height: 800vh; /* Occupies full viewport height */
+    }
+    
+    .pane {
+      flex: 1; /* Each pane takes equal available space */
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    
+    .left-pane {
+      background-color: #f0f0f0;
+    }
+    
+    .right-pane {
+      background-color: #e0e0e0;
+    }
+    label {
+        display: block;
+    }
+    dt { cursor:pointer;}
+    dt:hover {
+        background-color: #c0c0c0;
+    }
+  </style>
+  <script>
+      function createDB() {
+           ajax.post({url:"./bin/todo", query: 'op=create', success: function (json) {
+                if (json.status == 'Ok')
+                    document.querySelector('#message').textContent = json.message; //JSON.stringify(json)
+                else
+                    document.querySelector('#message').textContent = json.err
+            }})
+      }
+      function insertTask() {
+          if (document.querySelector('#taskId').value == 0) {
+              ajax.post({url:"./bin/todo", query: 'op=insert&name='+encodeURIComponent(document.querySelector('#taskName').value)
+                + '&description='+encodeURIComponent(document.querySelector('#taskDescription').value)
+                + '&due='+encodeURIComponent(document.querySelector('#dueDate').value), success: function (json) {
+                    if (json.status == 'Ok') {
+                        document.querySelector('#message').textContent = json.message; //JSON.stringify(json)
+                        allTasks() 
+                    } else
+                        document.querySelector('#message').textContent = json.err
+                }})
+          } else {
+              ajax.post({url:"./bin/todo", query: 'op=update&id=' + document.querySelector('#taskId').value
+                + '&name='+encodeURIComponent(document.querySelector('#taskName').value)
+                + '&description='+encodeURIComponent(document.querySelector('#taskDescription').value)
+                + '&due='+encodeURIComponent(document.querySelector('#dueDate').value)
+                + '&progress=' + document.querySelector('#taskProgress').value, success: function (json) {
+                    if (json.status == 'Ok') {
+                        document.querySelector('#message').textContent = json.message;
+                        allTasks() 
+                    } else
+                        document.querySelector('#message').textContent = json.err
+                }})
+          }
+      }
+      function allTasks() {
+          ajax.get({url:"./bin/todo?op=all", success: function (json) {
+                if (json.status == 'Ok') {
+                    const entries = document.querySelector('#taskEntries')
+
+                    entries.replaceChildren()
+                    for (entry of json.entries) {
+                        const dtEl = document.createElement("dt")
+                        dtEl.innerText = entry.name
+                        dtEl.dataset.id = entry.id
+                        dtEl.dataset.name = entry.name
+                        dtEl.dataset.description = entry.description
+                        dtEl.dataset.due = entry.due
+                        dtEl.dataset.progress = entry.progress
+                        dtEl.onclick = function () {
+                            showTask(this)
+                        }
+                        entries.appendChild(dtEl)
+                    }
+                      document.querySelector('#taskId').value = 0
+                      document.querySelector('#taskName').value = ''
+                      document.querySelector('#taskDescription').value = ''
+                      document.querySelector('#dueDate').value = new Date().toISOString().split('T')[0]
+                      document.querySelector('#taskProgress').value = 0
+                      document.querySelector('#deleteBtn').style.display = 'none'
+                } else
+                    document.querySelector('#message').textContent = json.err
+            }})
+      }
+      function showTask(el) {
+          document.querySelector('#taskId').value = el.dataset.id
+          document.querySelector('#taskName').value = el.textContent
+          document.querySelector('#taskDescription').value = el.dataset.description
+          document.querySelector('#dueDate').value = (el.dataset.due == 0?new Date():new Date(Number(el.dataset.due)*1000)).toISOString().split('T')[0]
+          document.querySelector('#taskProgress').value = el.dataset.progress
+          if (el.dataset.id == 0) {
+              document.querySelector('#insertBtn').textContent = 'add rec'
+              document.querySelector('#deleteBtn').style.display = 'none'
+          } else {
+              document.querySelector('#insertBtn').textContent = 'update rec'
+              document.querySelector('#deleteBtn').style.display = 'block'
+          }
+      }
+      function deleteTask() {
+          ajax.post({url:"./bin/todo", query: 'op=delete&id=' + document.querySelector('#taskId').value, success: function (json) {
+                if (json.status == 'Ok') {
+                    document.querySelector('#message').textContent = json.message;
+                    allTasks() 
+                } else
+                    document.querySelector('#message').textContent = json.err
+            }})
+      }
+        function formatDate(date) {
+            var d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+        
+            if (month.length < 2) 
+                month = '0' + month;
+            if (day.length < 2) 
+                day = '0' + day;
+        
+            return [year, month, day].join('-');
+        }
+      function version() {
+          
+      }
+  </script>
+  <script src="./common.js" language="Javascript"></script>
+</head>
+
+<body>
+    <header><h1>Manage tasks</h1></header>
+    <main>
+        <section>
+            <div  id="message"></div>
+        </section>
+        <section>
+            <button onclick="allTasks()">all tasks</button>
+        </section>
+        <div class="flex-container">
+            <section class="pane left-pane">
+                <div id="taskEntries">
+                    
+                </div>
+            </section>
+            <section class="pane rigt-pane">
+                <input type="hidden" id="taskId" name="taskId" required>
+                <div>
+                <label for="taskName">Name:</label>
+                <input type="text" id="taskName" name="taskName" required>
+                </div>
+                <br>
+                <div>
+                    <label for="taskDescription">Description:</label>
+                    <textarea id="taskDescription" name="taskDescription" rows="5" cols="30"></textarea>
+                </div>
+                <br>
+                <div>
+                    <label for="dueDate">Due Date:</label>
+                    <input type="date" id="dueDate" name="dueDate">
+                </div>
+                <div class="slidecontainer">
+                    <!-- 
+                        <progress id="file" value="32" max="100"> 32% </progress>
+                        <meter id="disk_d" value="0.6">60%</meter>
+                    -->
+                  <label for="taskProgress">Progress(0-100%):</label>
+                  <input type="range" min="1" max="100" value="0" class="slider" id="taskProgress">
+                </div>
+                <div>
+                    <button onclick="insertTask()" id="insertBtn">insert task</button>
+                    <button onclick="deleteTask()" id="deleteBtn" hidden>delete task</button>
+                </div>
+                
+            </section>
+        </div>
+    </main>
+    <footer onclick="version(this)">&copy; <script>document.write(new Date().getFullYear())</script> D Rogatkin</footer>
+</body>
+</html>

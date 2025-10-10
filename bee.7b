@@ -1,0 +1,23 @@
+project = todo
+files=[TodoManager.swift,Task.swift,main.swift]
+
+target compile {
+    dependency{ anynewer(*.swift,project) }
+    dependency{true}
+	exec swiftc (files,-color-diagnostics,-o,project)
+	if {
+	     neq(~~, 0)
+	     then {
+	        panic("compilation error(s)")
+	     }
+	 }
+}
+
+target run {
+	dependency{target(compile)}
+	dependency{}
+	set_env(QUERY_STRING,name=review%20items%20in%20bunch&descrption=all%20of%20them)
+	assign(program,./${project})
+	#prompt(Enter dir,.)
+	exec program(~~)
+}
