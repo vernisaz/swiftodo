@@ -31,6 +31,10 @@
     dt:hover {
         background-color: #c0c0c0;
     }
+    .control-panel {
+        display: flex;
+        
+    }
   </style>
   <script>
       function createDB() {
@@ -144,9 +148,6 @@
         <section>
             <div  id="message"></div>
         </section>
-        <section>
-            <button onclick="allTasks()">all tasks</button>
-        </section>
         <div class="flex-container">
             <section class="pane left-pane">
                 <div id="taskEntries">
@@ -169,16 +170,17 @@
                     <label for="dueDate">Due Date:</label>
                     <input type="date" id="dueDate" name="dueDate">
                 </div>
-                <div class="slidecontainer">
+                <div>
                     <!-- 
                         <progress id="file" value="32" max="100"> 32% </progress>
                         <meter id="disk_d" value="0.6">60%</meter>
                     -->
                   <label for="taskProgress">Progress(0-100%):</label>
-                  <input type="range" min="1" max="100" value="0" class="slider" id="taskProgress">
+                  <input type="range" min="1" max="100" value="0" id="taskProgress">
                 </div>
-                <div>
+                <div class="control-panel">
                     <button onclick="insertTask()" id="insertBtn">insert task</button>
+                    <button onclick="allTasks()">all tasks</button>
                     <button onclick="deleteTask()" id="deleteBtn" hidden>delete task</button>
                 </div>
                 
