@@ -85,6 +85,7 @@
                         dtEl.dataset.due = entry.due
                         dtEl.dataset.progress = entry.progress
                         dtEl.onclick = function () {
+                            document.querySelector('#message').textContent = ''
                             showTask(this)
                         }
                         entries.appendChild(dtEl)

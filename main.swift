@@ -8,25 +8,18 @@ struct StderrOutputStream: TextOutputStream {
 }
 
 extension String {
-    func jsonEncoded() -> String {
-        var result = ""
-        for c in self {
-            switch c {
-            case "\"":
-                result.append("\\\"")
-            case "\n":
-                result.append("\\n")
-            case "\r":
-                result.append("\\r")
-            case "\t":
-                result.append("\\t")
-            case "\\":
-                result.append("\\\\")
-            default:
-                result.append(c)
+    var jsonEncoded: String {
+        reduce(into: "") { result, c in
+            let symbol = switch c {
+                case "\"": "\\\""
+                case "\n": "\\n"
+                case "\r": "\\r"
+                case "\t": "\\t"
+                case "\\": "\\\\"
+                default: String(c)
             }
+            result.append(symbol)
         }
-        return result
     }
 }
 
@@ -62,12 +55,14 @@ if let method = ProcessInfo.processInfo.environment["REQUEST_METHOD"] {
 }
 
 let op: String? = parameters["op"]
+print("Status: 200 OK\r")
+print("Content-type: application/json\r\n\r")
 switch  op ?? "unknown" {
 case "create":
-    DBManager()
+    let _ = DBManager()
     print("created db.", to: &standardError)
 
-    print("{{\"message\":\"The table's created.\",\"status\":\"Ok\"}")
+    print("{\"message\":\"The table's created.\",\"status\":\"Ok\"}")
 case "insert":
     let db = DBManager()
     if let dateString = parameters["due"] {//"2025-10-08 21:18:00" // Your date string
@@ -81,50 +76,50 @@ case "insert":
         if let date = dateFormatter.date(from: dateString) {
             // Cast the Date to NSDate
             let nsDate = date as NSDate
-            if !db.insertTask(name: (parameters["name"] ?? "new task").jsonEncoded(),
-                description: (parameters["description"] ?? "description of task").jsonEncoded(), 
+            if !db.insertTask(name: (parameters["name"] ?? "new task").jsonEncoded,
+                description: (parameters["description"] ?? "description of task").jsonEncoded, 
             due: nsDate) {
-                print("{{\"err\":\"Couldn't insert the task.\"}")
+                print("{\"err\":\"Couldn't insert the task.\"}")
             } else {
-                print("{{\"message\":\"The task inserted.\",\"status\":\"Ok\"}")
+                print("{\"message\":\"The task inserted.\",\"status\":\"Ok\"}")
             }
             print("NSDate object: \(nsDate)", to: &standardError)
         } else {
             print("Could not convert string \(dateString) to date.", to: &standardError)
-            print("{{\"err\":\"Wrong date format \(dateString).\"}")
+            print("{\"err\":\"Wrong date format \(dateString).\"}")
         }
     }
 case "update":
     let id = Int(parameters["id"] ?? "0") ?? 0
     if id == 0 {
-        print("{{\"err\":\"No id of updated record\"}")
+        print("{\"err\":\"No id of updated record\"}")
         break
     }
     let db = DBManager()
     if let dateString = parameters["due"] {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
+
         if let date = dateFormatter.date(from: dateString) {
             // Cast the Date to NSDate
             let nsDate = date as NSDate
-            if !db.updateTask(id: id, name: (parameters["name"] ?? "new task").jsonEncoded(),
-                description: (parameters["description"] ?? "description of task").jsonEncoded(), 
+            //print("NSDate object: \(nsDate)", to: &standardError)
+            if !db.updateTask(id: id, name: (parameters["name"] ?? "new task").jsonEncoded,
+                description: (parameters["description"] ?? "description of task").jsonEncoded, 
                 progress: Int(parameters["progress"] ?? "0") ?? 0,
                 due: nsDate) {
-                print("{{\"err\":\"Couldn't update the task.\"}")
+                print("{\"err\":\"Couldn't update the task.\"}")
             } else {
-                print("{{\"message\":\"The task updated.\",\"status\":\"Ok\"}")
+                print("{\"message\":\"The task updated.\",\"status\":\"Ok\"}")
             }
-            print("NSDate object: \(nsDate)", to: &standardError)
         } else {
             print("Could not convert string \(dateString) to date.", to: &standardError)
-            print("{{\"err\":\"Wrong date format \(dateString).\"}")
+            print("{\"err\":\"Wrong date format \(dateString).\"}")
         }
     }
 case "all":
     let db = DBManager()
-    var res = "{{"
+    var res = "{"
     let tasks = db.getAllTasks()
     // should return a tuple with error
     res += "\"status\":\"Ok\", \"entries\": ["
@@ -136,15 +131,15 @@ case "all":
 case "delete":
     let id = Int(parameters["id"] ?? "0") ?? 0
     if id == 0 {
-        print("{{\"err\":\"No id of updated record\"}")
+        print("{\"err\":\"No id of updated record\"}")
         break
     }
     let db = DBManager()
     if db.deleteTask(id: id) {
-        print("{{\"message\":\"The task deleted.\",\"status\":\"Ok\"}")
+        print("{\"message\":\"The task deleted.\",\"status\":\"Ok\"}")
     } else {
-        print("{{\"err\":\"Couldn't delete the task.\"}")
+        print("{\"err\":\"Couldn't delete the task.\"}")
     }
 default:
-    print("{{\"err\":\"No known \(op).\"}")
+    print("{\"err\":\"No known \(op ?? "no value").\"}")
 }

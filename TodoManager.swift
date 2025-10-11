@@ -164,15 +164,15 @@ class DBManager{
 
     // Update task on Task table
     func updateTask(id: Int, name: String, description: String, progress: Int, due: NSDate) -> Bool{
-        let updateStatementString = "UPDATE Task SET name=?, description=?, progress=? WHERE id=?;"
+        let updateStatementString = "UPDATE Task SET name=?, description=?, progress=?, dueOn=? WHERE id=?;"
         var updateStatement: OpaquePointer? = nil
         
         if sqlite3_prepare_v2(db, updateStatementString, -1, &updateStatement, nil) == SQLITE_OK {
             sqlite3_bind_text(updateStatement, 1, (name as NSString).utf8String, -1, nil)
             sqlite3_bind_text(updateStatement, 2, (description as NSString).utf8String, -1, nil)
             sqlite3_bind_int(updateStatement, 3, Int32(progress))
-            
-            sqlite3_bind_int(updateStatement, 4, Int32(id))
+            sqlite3_bind_int(updateStatement, 4, Int32(due.timeIntervalSince1970))            
+            sqlite3_bind_int(updateStatement, 5, Int32(id))
 
             if sqlite3_step(updateStatement) == SQLITE_DONE {
                 print("Task updated successfully.", to: &standardError)
