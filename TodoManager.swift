@@ -50,6 +50,7 @@ class DBManager{
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 description TEXT,
+                url TEXT,
                 createdOn INTEGER,
                 dueOn INTEGER,
                 progress INTEGER
@@ -74,7 +75,7 @@ class DBManager{
     
     // Add a new task with registration screen (name, description, dueOn.)
     // Progress of the task has to be updated later
-    func insertTask(name: String, description: String, due: NSDate) -> Bool{
+    func insertTask(name: String, description: String, due: NSDate, url: Optional<String> = .none) -> Bool {
         let tasks = getAllTasks()
         
         // Check task id  is exist in Task table or not
@@ -84,16 +85,20 @@ class DBManager{
             }
         }
         
-        let insertStatementString = "INSERT INTO Task (name, description, dueOn, createdOn, progress) VALUES (?, ?, ?, ?, ?);"
+        let insertStatementString = "INSERT INTO Task (name, description, dueOn, createdOn, progress, url) VALUES (?, ?, ?, ?, ?, ?);"
         var insertStatement: OpaquePointer? = nil
         
         if sqlite3_prepare_v2(db, insertStatementString, -1, &insertStatement, nil) == SQLITE_OK {
-            //sqlite3_bind_int(insertStatement, 1, Int32(id))
             sqlite3_bind_text(insertStatement, 1, (name as NSString).utf8String, -1, nil)
             sqlite3_bind_text(insertStatement, 2, (description as NSString).utf8String, -1, nil)
             sqlite3_bind_int(insertStatement, 3, Int32(due.timeIntervalSince1970))
             sqlite3_bind_int(insertStatement, 4, Int32(Date().timeIntervalSince1970))
             sqlite3_bind_int(insertStatement, 5, 0)
+            if let unwrappedUrl = url {
+                sqlite3_bind_text(insertStatement, 6, (unwrappedUrl as NSString).utf8String, -1, nil)
+            } else {
+                sqlite3_bind_null(insertStatement, 6)
+            }
             // assign empty value to address
 
             if sqlite3_step(insertStatement) == SQLITE_DONE {
@@ -110,7 +115,7 @@ class DBManager{
         }
     }
 
-    // Get all tasks from User table
+    // Get all tasks from Task table
     func getAllTasks() -> [Task] {
         let queryStatementString = "SELECT * FROM Task;"
         var queryStatement: OpaquePointer? = nil
@@ -120,12 +125,20 @@ class DBManager{
                 let id = sqlite3_column_int(queryStatement, 0)
                 let name = String(describing: String(cString: sqlite3_column_text(queryStatement, 1)))
                 let description = String(describing: String(cString: sqlite3_column_text(queryStatement, 2)))
-                let dueDate = NSDate(timeIntervalSince1970: TimeInterval(sqlite3_column_int(queryStatement, 4)))
-                let progress = Int(sqlite3_column_int(queryStatement, 5))
+                //let cString = sqlite3_column_text(queryStatement, 3)
+                let url =
+                if let unwrappedPointer = sqlite3_column_text(queryStatement, 3) {
+                    String(describing: String(cString: unwrappedPointer))
+                } else {
+                    ""
+                }
+ 
+                let dueDate = NSDate(timeIntervalSince1970: TimeInterval(sqlite3_column_int(queryStatement, 5)))
+                let progress = Int(sqlite3_column_int(queryStatement, 6))
                 
-                tasks.append(Task(id: Int(id), name: name, descr: description, due: dueDate, progress: progress))
+                tasks.append(Task(id: Int(id), name: name, descr: description, due: dueDate, progress: progress, url: url))
                 print("Task Details:", to: &standardError)
-                print("\(id) | \(name) | \(description) | \(dueDate) | \(progress)", to: &standardError)
+                print("\(id) | \(name) | \(description) | \(url) | \(dueDate) | \(progress)", to: &standardError)
             }
         } else {
             print("SELECT statement is failed.", to: &standardError)
@@ -134,22 +147,25 @@ class DBManager{
         return tasks
     }
    
-    // Get user from User table by Email
-    func getTaskbyDue(due:NSDate) -> [Task] {
-        let queryStatementString = "SELECT * FROM Task WHERE dueOn >= ?;"
+    // Get unfinished tasks which overdue
+    func getUnfinishedTaskbyDue(due:NSDate? = nil) -> [Task] {
+        let queryStatementString = "SELECT * FROM Task WHERE dueOn <= ? AND progress < 100;"
         var queryStatement: OpaquePointer? = nil
         var task : [Task] = []
-        
+        var varDue = due
+        if varDue == nil {
+            varDue = NSDate()
+        }
         if sqlite3_prepare_v2(db,  queryStatementString, -1, &queryStatement, nil) == SQLITE_OK {
             //sqlite3_bind_text(queryStatement, 1, (description as NSString).utf8String, -1, nil)
-            sqlite3_bind_int(queryStatement, 1, Int32(due.timeIntervalSince1970))
+            sqlite3_bind_int(queryStatement, 1, Int32(varDue!.timeIntervalSince1970))
             
             if sqlite3_step(queryStatement) == SQLITE_ROW {
                 let id = sqlite3_column_int(queryStatement, 0)
                 let name = String(describing: String(cString: sqlite3_column_text(queryStatement, 1)))
                 let description = String(describing: String(cString: sqlite3_column_text(queryStatement, 3)))
-                let dueDate = NSDate(timeIntervalSince1970: TimeInterval(sqlite3_column_int(queryStatement, 4)))
-                let progress = sqlite3_column_int(queryStatement, 5)
+                let dueDate = NSDate(timeIntervalSince1970: TimeInterval(sqlite3_column_int(queryStatement, 5)))
+                let progress = sqlite3_column_int(queryStatement, 6)
                 
                 task.append(Task(id: Int(id), name: name, descr: description, due: dueDate, progress: Int(progress)))
                 print("Task Details:", to: &standardError)
@@ -163,16 +179,21 @@ class DBManager{
     }
 
     // Update task on Task table
-    func updateTask(id: Int, name: String, description: String, progress: Int, due: NSDate) -> Bool{
-        let updateStatementString = "UPDATE Task SET name=?, description=?, progress=?, dueOn=? WHERE id=?;"
+    func updateTask(id: Int, name: String, description: String, progress: Int, due: NSDate, url: String? = nil) -> Bool{
+        let updateStatementString = "UPDATE Task SET name=?, description=?, progress=?, dueOn=?, url=? WHERE id=?;"
         var updateStatement: OpaquePointer? = nil
-        
+ 
         if sqlite3_prepare_v2(db, updateStatementString, -1, &updateStatement, nil) == SQLITE_OK {
             sqlite3_bind_text(updateStatement, 1, (name as NSString).utf8String, -1, nil)
             sqlite3_bind_text(updateStatement, 2, (description as NSString).utf8String, -1, nil)
             sqlite3_bind_int(updateStatement, 3, Int32(progress))
-            sqlite3_bind_int(updateStatement, 4, Int32(due.timeIntervalSince1970))            
-            sqlite3_bind_int(updateStatement, 5, Int32(id))
+            sqlite3_bind_int(updateStatement, 4, Int32(due.timeIntervalSince1970))
+            if let unwrappedUrl = url {
+                sqlite3_bind_text(updateStatement, 5, (unwrappedUrl as NSString).utf8String, -1, nil)
+            } else {
+                sqlite3_bind_null(updateStatement, 5)
+            }
+            sqlite3_bind_int(updateStatement, 6, Int32(id))
 
             if sqlite3_step(updateStatement) == SQLITE_DONE {
                 print("Task updated successfully.", to: &standardError)

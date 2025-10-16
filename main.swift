@@ -63,6 +63,17 @@ case "create":
     print("created db.", to: &standardError)
 
     print("{\"message\":\"The table's created.\",\"status\":\"Ok\"}")
+case "unfinished":
+    let db = DBManager()
+    var res = "{"
+    let tasks = db.getUnfinishedTaskbyDue()
+    res += "\"status\":\"Ok\", \"entries\": ["
+    for task in tasks {
+        let url = task.url ?? ""
+        res += "{\"name\":\"\(task.name.jsonEncoded)\", \"id\":\(task.id), \"description\":\"\(task.description.jsonEncoded)\", \"progress\":\(task.progress), \"due\":\(task.dueOn.timeIntervalSince1970), \"url\":\"\(url.jsonEncoded)\"},"
+    }
+    res += "{\"name\":\"new task\", \"id\":0, \"description\":\"\", \"progress\":0, \"due\":0}]}"
+    print(res)
 case "insert":
     let db = DBManager()
     if let dateString = parameters["due"] {//"2025-10-08 21:18:00" // Your date string
@@ -78,7 +89,7 @@ case "insert":
             let nsDate = date as NSDate
             if !db.insertTask(name: (parameters["name"] ?? "new task").jsonEncoded,
                 description: (parameters["description"] ?? "description of task").jsonEncoded, 
-            due: nsDate) {
+            due: nsDate, url: parameters["url"] ) {
                 print("{\"err\":\"Couldn't insert the task.\"}")
             } else {
                 print("{\"message\":\"The task inserted.\",\"status\":\"Ok\"}")
@@ -104,10 +115,10 @@ case "update":
             // Cast the Date to NSDate
             let nsDate = date as NSDate
             //print("NSDate object: \(nsDate)", to: &standardError)
-            if !db.updateTask(id: id, name: (parameters["name"] ?? "new task").jsonEncoded,
-                description: (parameters["description"] ?? "description of task").jsonEncoded, 
+            if !db.updateTask(id: id, name: (parameters["name"] ?? "new task"),
+                description: (parameters["description"] ?? "description of task"), 
                 progress: Int(parameters["progress"] ?? "0") ?? 0,
-                due: nsDate) {
+                due: nsDate, url: parameters["url"]) {
                 print("{\"err\":\"Couldn't update the task.\"}")
             } else {
                 print("{\"message\":\"The task updated.\",\"status\":\"Ok\"}")
@@ -124,9 +135,10 @@ case "all":
     // should return a tuple with error
     res += "\"status\":\"Ok\", \"entries\": ["
     for task in tasks {
-        res += "{\"name\":\"\(task.name)\", \"id\":\(task.id), \"description\":\"\(task.description)\", \"progress\":\(task.progress), \"due\":\(task.dueOn.timeIntervalSince1970)},"
+        let url = task.url ?? ""
+        res += "{\"name\":\"\(task.name.jsonEncoded)\", \"id\":\(task.id), \"description\":\"\(task.description.jsonEncoded)\", \"progress\":\(task.progress), \"due\":\(task.dueOn.timeIntervalSince1970),\"url\":\"\(url.jsonEncoded)\"},"
     }
-    res += "{\"name\":\"new task\", \"id\":0, \"description\":\"\", \"progress\":0, \"due\":0}]}"
+    res += "{\"name\":\"new task\", \"id\":0, \"description\":\"\", \"progress\":0, \"due\":0, \"url\":\"\"}]}"
     print(res)
 case "delete":
     let id = Int(parameters["id"] ?? "0") ?? 0
@@ -139,6 +151,13 @@ case "delete":
         print("{\"message\":\"The task deleted.\",\"status\":\"Ok\"}")
     } else {
         print("{\"err\":\"Couldn't delete the task.\"}")
+    }
+case "wipeout":
+    let db = DBManager()
+    if db.deleteDatabase() {
+        print("{\"message\":\"The database deleted.\",\"status\":\"Ok\"}")
+    } else {
+        print("{\"err\":\"Couldn't delete the db.\"}")
     }
 default:
     print("{\"err\":\"No known \(op ?? "no value").\"}")
