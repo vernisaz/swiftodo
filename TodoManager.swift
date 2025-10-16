@@ -160,7 +160,7 @@ class DBManager{
             //sqlite3_bind_text(queryStatement, 1, (description as NSString).utf8String, -1, nil)
             sqlite3_bind_int(queryStatement, 1, Int32(varDue!.timeIntervalSince1970))
             
-            if sqlite3_step(queryStatement) == SQLITE_ROW {
+            while sqlite3_step(queryStatement) == SQLITE_ROW {
                 let id = sqlite3_column_int(queryStatement, 0)
                 let name = String(describing: String(cString: sqlite3_column_text(queryStatement, 1)))
                 let description = String(describing: String(cString: sqlite3_column_text(queryStatement, 2)))
