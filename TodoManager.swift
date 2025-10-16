@@ -163,7 +163,7 @@ class DBManager{
             if sqlite3_step(queryStatement) == SQLITE_ROW {
                 let id = sqlite3_column_int(queryStatement, 0)
                 let name = String(describing: String(cString: sqlite3_column_text(queryStatement, 1)))
-                let description = String(describing: String(cString: sqlite3_column_text(queryStatement, 3)))
+                let description = String(describing: String(cString: sqlite3_column_text(queryStatement, 2)))
                 let dueDate = NSDate(timeIntervalSince1970: TimeInterval(sqlite3_column_int(queryStatement, 5)))
                 let progress = sqlite3_column_int(queryStatement, 6)
                 

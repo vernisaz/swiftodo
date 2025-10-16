@@ -49,7 +49,11 @@ if let method = ProcessInfo.processInfo.environment["REQUEST_METHOD"] {
     for pair in pairs {
         let nameVal = pair.split(separator: "=", maxSplits: 1)
         if let unwrappedName = nameVal[0].removingPercentEncoding {
-            parameters[unwrappedName] = nameVal[1].removingPercentEncoding ?? ""
+            if nameVal.count > 1 {
+                parameters[unwrappedName] = nameVal[1].removingPercentEncoding ?? ""
+            } else {
+                parameters[unwrappedName] = ""
+            }
         }
     }
 }
