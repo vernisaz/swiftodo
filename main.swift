@@ -91,8 +91,8 @@ case "insert":
         if let date = dateFormatter.date(from: dateString) {
             // Cast the Date to NSDate
             let nsDate = date as NSDate
-            if !db.insertTask(name: (parameters["name"] ?? "new task").jsonEncoded,
-                description: (parameters["description"] ?? "description of task").jsonEncoded, 
+            if !db.insertTask(name: (parameters["name"] ?? "new task"),
+                description: (parameters["description"] ?? "description of task"), 
             due: nsDate, url: parameters["url"] ) {
                 print("{\"err\":\"Couldn't insert the task.\"}")
             } else {
