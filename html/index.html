@@ -153,6 +153,12 @@
         function pendingTasks(date) {
             allTasks(true)
         }
+        function openLink() {
+            const url = document.querySelector('#taskUrl').value 
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
       function version() {
           
       }
@@ -186,6 +192,7 @@
                 <div>
                     <label for="taskUrl">URL:</label>
                     <input type="url" id="taskUrl" name="taskUrl" placeholder="https://taskinfo.com">
+                    <button onclick="openLink()">🔗</button>
                 </div>
                 <br>
                 <div>
