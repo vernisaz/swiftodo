@@ -164,5 +164,5 @@ case "wipeout":
         print("{\"err\":\"Couldn't delete the db.\"}")
     }
 default:
-    print("{\"err\":\"No known \(op ?? "no value").\"}")
+    print("{\"err\":\"Not known \(op ?? "no value").\"}")
 }
