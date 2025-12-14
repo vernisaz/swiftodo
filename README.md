@@ -5,7 +5,7 @@ The project demonstrates of a possibility using CGI for Swift programs with
 the Rust [web server](https://github.com/vernisaz/simhttp).
 
 ## Build
-The build is managed by [RustBee](https://github.com/vernisaz/rust_bee).
+The build is managed by [RustBee](https://github.com/vernisaz/rust_bee) and [common scripts](https://github.com/vernisaz/simscript).
 
 ## Deployment
 The following fragment has to be added in **SimHTTP** *conf* file:
