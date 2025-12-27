@@ -16,6 +16,7 @@ extension String {
                 case "\r": "\\r"
                 case "\t": "\\t"
                 case "\\": "\\\\"
+                case "\u{0}"..."\u{1F}": "\\u\(String(format: "%04X", c.asciiValue!))"
                 default: String(c)
             }
             result.append(symbol)
