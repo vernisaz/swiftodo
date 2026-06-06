@@ -10,11 +10,11 @@ The build is managed by [RustBee](https://github.com/vernisaz/rust_bee) and [com
 ## Deployment
 The following fragment has to be added in **SimHTTP** *env.conf* file:
 ```json
-{"path":"/task/bin", "_comment_": "Tasks planner in Swift",
-       "CGI": true,
-       "translated": "./../switodo"},
-       {"path":"/task",
-       "translated": "./../switodo/html"}
+    {"path":"/task/bin", "_comment_": "Tasks planner in Swift",
+   "CGI": true,
+   "translated": "./../switodo"},
+   {"path":"/task",
+   "translated": "./../switodo/html"}
 ```
 Correct the translated paths accordingly the repository location
 relative to *SimHTTP* location. Paths can be specified in an absolute form too.

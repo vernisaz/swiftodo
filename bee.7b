@@ -5,3 +5,4 @@ set_env(REQUEST_METHOD,GET)
 src dir=.
 common =../simscript/comm-swift.7b:file
 include(common)
+display(URL: http://mac:3000/task/)

@@ -60,8 +60,8 @@ if let method = ProcessInfo.processInfo.environment["REQUEST_METHOD"] {
 }
 
 let op: String? = parameters["op"]
-print("Status: 200 OK\r")
-print("Content-type: application/json\r\n\r")
+print("Status: 200 OK\r") // ending \n is the part of print
+print("Content-type: application/json; charset=utf-8\r\n\r")
 switch  op ?? "unknown" {
 case "create":
     let _ = DBManager()

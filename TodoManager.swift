@@ -22,7 +22,7 @@ class DBManager{
             return nil
         }
         else{
-            print("DB successfully created.", to: &standardError)
+            print("DB successfully created/opened.", to: &standardError)
             return db
         }
     }
@@ -43,7 +43,7 @@ class DBManager{
         }
     }    
     
-    // Create users table
+    // Create tasks table
     func createTaskTable() {
         let createTableString = """
             CREATE TABLE IF NOT EXISTS Task (
@@ -99,7 +99,6 @@ class DBManager{
             } else {
                 sqlite3_bind_null(insertStatement, 6)
             }
-            // assign empty value to address
 
             if sqlite3_step(insertStatement) == SQLITE_DONE {
                 print("Task is created successfully.", to: &standardError)
